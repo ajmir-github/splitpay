@@ -9,21 +9,23 @@ import {
 
 function Home({ setStore }) {
   const navigate = useNavigate();
-  const [input, setInput] = useState(0);
+  const [input, setInput] = useState();
   function nextPage() {
     if (!input) return;
     setStore({ total: +input, remaining: +input, paid: 0 });
     navigate("/split");
   }
   return (
-    <div className="flex flex-col">
-      <h1 className="4xl text-blue-600 font-serif">Enter the total:</h1>
+    <div className="flex flex-col gap-4 grow">
+      <div className="grow text-lg">Enter the total:</div>
       <input
+        id="totalInput"
         type="number"
+        className="input input-bordered input-primary grow text-lg"
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
-      <button onClick={nextPage} className="">
+      <button onClick={nextPage} className="btn btn-primary text-lg">
         Split
       </button>
     </div>
@@ -32,22 +34,33 @@ function Home({ setStore }) {
 
 function Indicator({ store }) {
   return (
-    <h1>
-      <span className="text-red-700">Total:{store.total}</span>
-      <span className="text-blue-700">Remaining:{store.remaining}</span>
-      <span className="text-green-600">Paid:{store.paid}</span>
-    </h1>
+    <div className="stats stats-horizontal shadow">
+      <div className="stat">
+        <div className="stat-title">Total</div>
+        <div className="stat-value">€{store.total}</div>
+      </div>
+
+      <div className="stat">
+        <div className="stat-title">Remaining</div>
+        <div className="stat-value">€{store.remaining}</div>
+      </div>
+
+      <div className="stat">
+        <div className="stat-title">Paid</div>
+        <div className="stat-value">€{store.paid}</div>
+      </div>
+    </div>
   );
 }
 
 function PayFor({ setStore }) {
-  const [input, setInput] = useState(0);
+  const [input, setInput] = useState("");
   const [list, setList] = useState([]);
   const [subtotal, setSubTotal] = useState(0);
   const addToList = () => {
     if (!input) return;
     setList([...list, +input]);
-    setInput(0);
+    setInput("");
   };
   const removeFromList = (targetIndex) => {
     setList(list.filter((_, index) => index !== targetIndex));
@@ -66,35 +79,79 @@ function PayFor({ setStore }) {
     setSubTotal(0);
   };
   return (
-    <div>
-      <div>
-        {list.map((item, index) => (
-          <div key={index}>
-            {index + 1}: {item}
-            <button onClick={() => removeFromList(index)}>Delete</button>
-          </div>
-        ))}
-      </div>
-      <div>
+    <div className="flex flex-col gap-4">
+      {list.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="table">
+            {/* head */}
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Price</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((price, index) => (
+                <tr key={index}>
+                  <th>{index + 1}</th>
+                  <td>€{price}</td>
+                  <td>
+                    <button
+                      className="btn btn-circle btn-sm btn-error"
+                      onClick={() => removeFromList(index)}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <div className="join">
         <input
+          className="input input-bordered input-primary join-item grow text-lg"
           type="number"
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
-        <button onClick={addToList}>Add</button>
+        <button
+          className="btn join-item btn-primary text-lg"
+          onClick={addToList}
+        >
+          Add
+        </button>
       </div>
-      <div>
-        <div>Subtotal: {subtotal}</div>
-        <button onClick={pay}>Pay</button>
-      </div>
+      {!subtotal || (
+        <button className="btn btn-success text-lg" onClick={pay}>
+          Pay €{subtotal}
+        </button>
+      )}
     </div>
   );
 }
 
 function Split({ store, setStore }) {
   return (
-    <div>
-      <Link to={"/"}>Back</Link>
+    <div className="flex flex-col gap-4 grow">
+      <Link to={"/"} className="btn grow btn-error btn-outline">
+        Clear
+      </Link>
       <Indicator store={store} />
       <PayFor setStore={setStore} />
     </div>
