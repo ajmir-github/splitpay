@@ -32,14 +32,9 @@ function Home({ setStore }) {
   );
 }
 
-function Indicator({ store }) {
+function Stats({ store }) {
   return (
     <div className="stats stats-horizontal">
-      <div className="stat">
-        <div className="stat-title">Total</div>
-        <div className="stat-value">€{store.total}</div>
-      </div>
-
       <div className="stat">
         <div className="stat-title">Remaining</div>
         <div className="stat-value">€{store.remaining}</div>
@@ -147,10 +142,15 @@ function PayFor({ setStore }) {
 function Split({ store, setStore }) {
   return (
     <div className="flex flex-col gap-4 sm:gap-8 grow">
-      <Link to={"/"} className="btn grow btn-error">
-        Clear
-      </Link>
-      <Indicator store={store} />
+      <div className="flex items-center">
+        <div className="font-extrabold text-2xl text-center grow">
+          Total €{store.total}
+        </div>
+        <Link to={"/"} className="btn  btn-error btn-outline btn-sm">
+          Clear
+        </Link>
+      </div>
+      <Stats store={store} />
       <PayFor setStore={setStore} />
     </div>
   );
@@ -163,9 +163,6 @@ function App() {
     paid: 0,
   });
 
-  useEffect(() => {
-    console.log(store);
-  });
   return (
     <div className="flex justify-center p-4 sm:p-8">
       <div className="max-w-screen-sm grow">
