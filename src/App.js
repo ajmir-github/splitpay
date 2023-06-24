@@ -9,15 +9,11 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-function normalizeFloat(strNum) {
-  return parseFloat((+strNum).toFixed(2));
-}
-
 function Home({ setStore }) {
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState(null);
   function nextPage() {
-    const total = parseFloat(inputValue);
+    const total = Number(inputValue);
     setStore({ total, remaining: total, paid: 0 });
     navigate("/split");
   }
@@ -59,7 +55,7 @@ function Stats({ store }) {
 }
 
 function normalizeFloatNumber(num) {
-  return parseFloat(num.toFixed(2));
+  return Number((+num).toFixed(2));
 }
 
 function PayFor({ store, setStore }) {
@@ -68,10 +64,7 @@ function PayFor({ store, setStore }) {
   const [inputValue, setInputValue] = useState(null);
 
   const addToList = () => {
-    const newNum = parseFloat(inputValue);
-    console.log(newNum, store);
-    if (newNum > store.remaining) return;
-    setList([...list, newNum]);
+    setList([...list, normalizeFloatNumber(inputValue)]);
   };
   const removeFromList = (targetIndex) => {
     setList(list.filter((_, index) => index !== targetIndex));
@@ -87,10 +80,11 @@ function PayFor({ store, setStore }) {
     setSubTotal(0);
   };
   const pay = () => {
+    if (subtotal > store.remaining) return;
     setStore({
       ...store,
-      paid: normalizeFloat(store.paid + subtotal),
-      remaining: normalizeFloat(store.remaining - subtotal),
+      paid: normalizeFloatNumber(store.paid + subtotal),
+      remaining: normalizeFloatNumber(store.remaining - subtotal),
     });
     reset();
   };
