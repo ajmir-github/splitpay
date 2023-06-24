@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
+import CurrencyInput from "react-currency-input-field";
+
 import {
   BrowserRouter,
   Routes,
@@ -8,40 +10,34 @@ import {
 } from "react-router-dom";
 
 function normalizeFloat(strNum) {
-  return parseFloat(parseFloat(strNum).toFixed(2));
-}
-
-function CurrencyInput({ onNext, children }) {
-  const inputRef = useRef(null);
-  const onClick = () => {
-    const input = inputRef.current.value;
-    const number = normalizeFloat(input);
-    onNext(number);
-  };
-  return (
-    <div className="join">
-      <input
-        className="input input-bordered input-primary join-item grow text-center text-lg"
-        type="number"
-        ref={inputRef}
-      />
-      <button className="btn join-item btn-primary text-lg" onClick={onClick}>
-        {children}
-      </button>
-    </div>
-  );
+  return parseFloat((+strNum).toFixed(2));
 }
 
 function Home({ setStore }) {
   const navigate = useNavigate();
-  function nextPage(input) {
-    setStore({ total: input, remaining: input, paid: 0 });
+  const [inputValue, setInputValue] = useState(null);
+  function nextPage() {
+    const total = parseFloat(inputValue);
+    setStore({ total, remaining: total, paid: 0 });
     navigate("/split");
   }
   return (
     <div className="flex flex-col gap-4 sm:gap-8 grow">
-      <div className="grow text-4xl sm:text-6xl">Enter the total:</div>
-      <CurrencyInput onNext={nextPage}>Split</CurrencyInput>
+      <div className="join">
+        <CurrencyInput
+          className="input input-bordered input-primary join-item grow text-center text-lg"
+          placeholder="Please enter the total"
+          decimalsLimit={2}
+          onValueChange={(value) => setInputValue(value)}
+          prefix={"€"}
+        />
+        <button
+          className="btn join-item btn-primary text-lg"
+          onClick={nextPage}
+        >
+          Split
+        </button>
+      </div>
     </div>
   );
 }
@@ -62,30 +58,41 @@ function Stats({ store }) {
   );
 }
 
-function PayFor({ setStore }) {
+function normalizeFloatNumber(num) {
+  return parseFloat(num.toFixed(2));
+}
+
+function PayFor({ store, setStore }) {
   const [list, setList] = useState([]);
   const [subtotal, setSubTotal] = useState(0);
-  const addToList = (num) => {
-    setList([...list, num]);
+  const [inputValue, setInputValue] = useState(null);
+
+  const addToList = () => {
+    const newNum = parseFloat(inputValue);
+    console.log(newNum, store);
+    if (newNum > store.remaining) return;
+    setList([...list, newNum]);
   };
   const removeFromList = (targetIndex) => {
     setList(list.filter((_, index) => index !== targetIndex));
   };
   useEffect(() => {
     if (list.length === 0) return;
-    const totalNum = list.reduce((a, b) => a + b);
-    const normalNum = parseFloat(totalNum).toFixed(2);
-    setSubTotal(normalNum);
+    const total = list.reduce((a, b) => a + b);
+    setSubTotal(normalizeFloatNumber(total));
   }, [list]);
 
-  const pay = () => {
-    setStore((store) => ({
-      ...store,
-      paid: store.paid + subtotal,
-      remaining: store.remaining - subtotal,
-    }));
+  const reset = () => {
     setList([]);
     setSubTotal(0);
+  };
+  const pay = () => {
+    setStore({
+      ...store,
+      paid: normalizeFloat(store.paid + subtotal),
+      remaining: normalizeFloat(store.remaining - subtotal),
+    });
+    reset();
   };
   return (
     <div className="flex flex-col gap-4 sm:gap-8">
@@ -130,7 +137,22 @@ function PayFor({ setStore }) {
           </tbody>
         </table>
       )}
-      <CurrencyInput onNext={addToList}>Add</CurrencyInput>
+
+      <div className="join">
+        <CurrencyInput
+          className="input input-bordered input-primary join-item grow text-center text-lg"
+          placeholder="Please enter the total"
+          onValueChange={(value) => setInputValue(value)}
+          prefix={"€"}
+        />
+        <button
+          className="btn join-item btn-primary text-lg"
+          onClick={addToList}
+        >
+          Add
+        </button>
+      </div>
+
       {!subtotal || (
         <button className="btn btn-success text-lg" onClick={pay}>
           Pay €{subtotal}
@@ -152,7 +174,7 @@ function Split({ store, setStore }) {
         </Link>
       </div>
       <Stats store={store} />
-      <PayFor setStore={setStore} />
+      <PayFor store={store} setStore={setStore} />
     </div>
   );
 }
@@ -160,7 +182,6 @@ function Split({ store, setStore }) {
 function App() {
   const [store, setStore] = useState({
     total: 10,
-    remaining: 10,
     paid: 0,
   });
 
